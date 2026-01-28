@@ -1,5 +1,10 @@
 import Sequencer from "@/components/Sequencer";
+import Auth from "@/components/Auth";
 
 export default function Home() {
-  return <Sequencer />;
+  return (
+    <div>
+      <Sequencer />
+    </div>
+  )
 }
