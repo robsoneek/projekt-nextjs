@@ -2,9 +2,13 @@
 
 import { useState } from "react";
 
+type Props = {
+  currentStep: number;
+};
+
 const trackNames = ["Kick", "Snare", "Hi-Hat", "Clap"];
 
-export default function Sequencer() {
+export default function Sequencer({ currentStep }: Props) {
   const [grid, setGrid] = useState(() =>
     new Array(4).fill(null).map(() => Array(16).fill(false)),
   );
@@ -25,20 +29,28 @@ export default function Sequencer() {
               {trackNames[trackIndex]}
             </span>
             <div className="flex gap-1">
-              {row.map((isActive, stepIndex) => (
-                <button
-                  key={stepIndex}
-                  onClick={() => toggleStep(trackIndex, stepIndex)}
-                  className={`
-                    w-8 h-10 rounded-sm border border-zinc-700 transition-colors
-                    ${
-                      isActive
-                        ? "bg-orange-500 border-orange-400 shadow-[0_0_10px_rgba(249,115,22,0.5)]"
-                        : "bg-zinc-800 hover:bg-zinc-700"
-                    }
-                  `}
-                />
-              ))}
+              {row.map((isActive, stepIndex) => {
+                const isCurrent = stepIndex === currentStep;
+                return (
+                  <button
+                    key={stepIndex}
+                    onClick={() => toggleStep(trackIndex, stepIndex)}
+                    className={`
+                      w-8 h-10 rounded-sm transition-all duration-75 border
+                      ${isCurrent ? "border-white border-b-4" : "border-zinc-700"}
+                      ${
+                        isActive
+                          ? isCurrent
+                            ? "bg-orange-400 shadow-[0_0_15px_rgba(251,146,60,0.8)]"
+                            : "bg-orange-500 border-orange-400 shadow-[0_0_10px_rgba(249,115,22,0.5)]"
+                          : isCurrent
+                            ? "bg-zinc-700"
+                            : "bg-zinc-800 hover:bg-zinc-700"
+                      }
+                    `}
+                  />
+                );
+              })}
             </div>
           </div>
         ))}
