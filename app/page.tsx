@@ -3,12 +3,27 @@
 import { useState, useEffect } from "react";
 import Sequencer from "@/components/Sequencer";
 import Auth from "@/components/Auth";
-import Playback from "@/components/Playback";
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '@/app/firebase';
+import PlaybackControls from "@/components/PlaybackControls";
+import Uploader from "@/components/Uploader";
 
 export default function Home() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [bpm, setBpm] = useState(120);
   const [currentStep, setCurrentStep] = useState(0);
+  const [customSounds, setCustomSounds] = useState<{ name: string; url: string }[]>([]);
+  const [trackUrls, setTrackUrls] = useState<string[]>(["", "", "", ""]);
+
+  useEffect(() => {
+    const fetchSounds = async () => {
+      const querySnapshot = await getDocs(collection(db, "customSounds"));
+      const soundsList = querySnapshot.docs.map(doc => doc.data() as {name: string, url: string});
+      setCustomSounds(soundsList);
+    };
+
+    fetchSounds();
+  }, []);
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
@@ -28,13 +43,19 @@ export default function Home() {
       </h1>
 
       <div className="w-full max-w-3xl flex flex-col gap-6">
-        <Playback
+        <PlaybackControls
           isPlaying={isPlaying}
           onTogglePlay={() => setIsPlaying(!isPlaying)}
           bpm={bpm}
           onBpmChange={setBpm}
         />
-        <Sequencer currentStep={currentStep} />
+        <Sequencer 
+          currentStep={currentStep}
+          customSounds={customSounds}
+          trackUrls={trackUrls}
+          setTrackUrls={setTrackUrls}
+        />
+        <Uploader />
       </div>
     </main>
   );

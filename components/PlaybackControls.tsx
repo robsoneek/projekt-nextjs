@@ -7,7 +7,7 @@ type Props = {
   onBpmChange: (newBpm: number) => void;
 };
 
-export default function Playback({
+export default function PlaybackControls({
   isPlaying,
   onTogglePlay,
   bpm,
