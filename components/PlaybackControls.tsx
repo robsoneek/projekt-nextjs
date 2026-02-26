@@ -5,6 +5,7 @@ type Props = {
   bpm: number;
   onTogglePlay: () => void;
   onBpmChange: (newBpm: number) => void;
+  onClear: () => void;
 };
 
 export default function PlaybackControls({
@@ -12,6 +13,7 @@ export default function PlaybackControls({
   onTogglePlay,
   bpm,
   onBpmChange,
+  onClear,
 }: Props) {
   return (
     <div className="flex gap-4 p-4 border-b border-zinc-800">
@@ -43,6 +45,12 @@ export default function PlaybackControls({
         />
       </div>
       <span className="text-white font-mono">{bpm} BPM</span>
+      <button
+        onClick={onClear}
+        className="px-4 py-2 text-sm font-bold text-zinc-400 border border-zinc-700 rounded transition-all hover:text-white hover:bg-red-600/20 hover:border-red-500 hover:shadow-[0_0_10px_rgba(239,68,68,0.4)]"
+      >
+        Clear
+      </button>
     </div>
   );
 }

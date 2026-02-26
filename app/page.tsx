@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react";
 import Sequencer from "@/components/Sequencer";
 import Auth from "@/components/Auth";
-import { collection, getDocs } from 'firebase/firestore';
-import { db } from '@/app/firebase';
+import { collection, getDocs } from "firebase/firestore";
+import { db } from "@/app/firebase";
 import PlaybackControls from "@/components/PlaybackControls";
 import Uploader from "@/components/Uploader";
 
@@ -12,13 +12,31 @@ export default function Home() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [bpm, setBpm] = useState(120);
   const [currentStep, setCurrentStep] = useState(0);
-  const [customSounds, setCustomSounds] = useState<{ name: string; url: string }[]>([]);
+  const [customSounds, setCustomSounds] = useState<
+    { name: string; url: string }[]
+  >([]);
   const [trackUrls, setTrackUrls] = useState<string[]>(["", "", "", ""]);
+  const [grid, setGrid] = useState(() =>
+    new Array(4).fill(null).map(() => Array(16).fill(false)),
+  );
+
+  const handleClearGrid = () => {
+    setGrid(new Array(4).fill(null).map(() => Array(16).fill(false)));
+  };
+
+  const toggleStep = (trackIndex: number, stepIndex: number) => {
+    const newGrid = [...grid];
+    newGrid[trackIndex] = [...newGrid[trackIndex]];
+    newGrid[trackIndex][stepIndex] = !newGrid[trackIndex][stepIndex];
+    setGrid(newGrid);
+  };
 
   useEffect(() => {
     const fetchSounds = async () => {
       const querySnapshot = await getDocs(collection(db, "customSounds"));
-      const soundsList = querySnapshot.docs.map(doc => doc.data() as {name: string, url: string});
+      const soundsList = querySnapshot.docs.map(
+        (doc) => doc.data() as { name: string; url: string },
+      );
       setCustomSounds(soundsList);
     };
 
@@ -42,18 +60,21 @@ export default function Home() {
         BEATS
       </h1>
 
-      <div className="w-full max-w-3xl flex flex-col gap-6">
+      <div className="w-full max-w-5xl flex flex-col gap-6">
         <PlaybackControls
           isPlaying={isPlaying}
           onTogglePlay={() => setIsPlaying(!isPlaying)}
           bpm={bpm}
           onBpmChange={setBpm}
+          onClear={handleClearGrid}
         />
-        <Sequencer 
+        <Sequencer
           currentStep={currentStep}
           customSounds={customSounds}
           trackUrls={trackUrls}
           setTrackUrls={setTrackUrls}
+          grid={grid}
+          toggleStep={toggleStep}
         />
         <Uploader />
       </div>
