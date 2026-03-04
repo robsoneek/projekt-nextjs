@@ -9,6 +9,7 @@ type Props = {
   setTrackUrls: (urls: string[]) => void;
   grid: boolean[][];
   toggleStep: (trackIndex: number, stepIndex: number) => void;
+  onAddTrack: () => void;
 };
 
 export default function Sequencer({
@@ -18,9 +19,15 @@ export default function Sequencer({
   setTrackUrls,
   grid,
   toggleStep,
+  onAddTrack,
 }: Props) {
   const [volumes, setVolumes] = useState<number[]>([1, 1, 1, 1]);
   const [mutes, setMutes] = useState<boolean[]>([false, false, false, false]);
+  const handleAddNewRow = () => {
+    setVolumes((prev) => [...prev, 1]);
+    setMutes((prev) => [...prev, false]);
+    onAddTrack();
+  };
   useEffect(() => {
     grid.forEach((row, trackIndex) => {
       const isActive = row[currentStep];
@@ -117,6 +124,12 @@ export default function Sequencer({
             </div>
           </div>
         ))}
+        <button
+          onClick={handleAddNewRow}
+          className="mt-2 w-full py-3 rounded-lg border-2 border-dashed border-zinc-700 text-zinc-500 font-bold hover:border-orange-500 hover:text-orange-500 hover:bg-orange-500/10 transition-all flex items-center justify-center gap-2"
+        >
+          <span className="text-xl leading-none">+</span> ADD TRACK
+        </button>
       </div>
     </div>
   );

@@ -24,6 +24,11 @@ export default function Home() {
     setGrid(new Array(4).fill(null).map(() => Array(16).fill(false)));
   };
 
+  const handleAddTrack = () => {
+    setGrid((prevGrid) => [...prevGrid, Array(16).fill(false)]);
+    setTrackUrls((prevUrls) => [...prevUrls, ""]);
+  };
+
   const toggleStep = (trackIndex: number, stepIndex: number) => {
     const newGrid = [...grid];
     newGrid[trackIndex] = [...newGrid[trackIndex]];
@@ -75,6 +80,7 @@ export default function Home() {
           setTrackUrls={setTrackUrls}
           grid={grid}
           toggleStep={toggleStep}
+          onAddTrack={handleAddTrack}
         />
         <Uploader />
       </div>
