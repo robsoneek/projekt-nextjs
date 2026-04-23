@@ -1,5 +1,7 @@
 "use client";
 
+//TODO implementovat prihlaseni a udelat stranku s profilem
+
 import { useState, useEffect } from "react";
 import Sequencer from "@/components/Sequencer";
 import Auth from "@/components/Auth";
@@ -7,21 +9,39 @@ import { collection, getDocs, addDoc } from "firebase/firestore";
 import { db } from "@/app/firebase";
 import PlaybackControls from "@/components/PlaybackControls";
 import Uploader from "@/components/Uploader";
+import { create } from "domain";
+
+const DEFAULT_SOUNDS = [
+  { name: "Kick", url: "/sounds/KICK - my favorite.wav" },
+  { name: "Snare", url: "/sounds/SNARE - r.i.p..wav" },
+  { name: "Hat", url: "/sounds/HAT - basic.wav" },
+  { name: "Clap", url: "/sounds/CLAP - basic.wav" },
+];
 
 export default function Home() {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [bpm, setBpm] = useState(120);
+  const [bpm, setBpm] = useState(140);
   const [currentStep, setCurrentStep] = useState(0);
-  const [customSounds, setCustomSounds] = useState<
-    { name: string; url: string }[]
-  >([]);
-  const [trackUrls, setTrackUrls] = useState<string[]>(["", "", "", ""]);
-  const [grid, setGrid] = useState(() =>
-    new Array(4).fill(null).map(() => Array(16).fill(false)),
+  const [customSounds, setCustomSounds] =
+    useState<{ name: string; url: string }[]>(DEFAULT_SOUNDS);
+  const [trackUrls, setTrackUrls] = useState<string[]>(
+    DEFAULT_SOUNDS.map((s) => s.url),
   );
+  const createBlankGrid = (numTracks = 4) =>
+    new Array(numTracks).fill(null).map(() => Array(16).fill(false));
+  const [patterns, setPatterns] = useState([
+    createBlankGrid(),
+    createBlankGrid(),
+    createBlankGrid(),
+    createBlankGrid(),
+  ]);
+  const [activePattern, setActivePattern] = useState(0);
+  const currentGrid = patterns[activePattern];
   const [beatName, setBeatName] = useState("");
   const [isBrowserOpen, setIsBrowserOpen] = useState(false);
   const [savedBeats, setSavedBeats] = useState<any[]>([]);
+  const [volumes, setVolumes] = useState<number[]>([1, 1, 1, 1]);
+  const [mutes, setMutes] = useState<boolean[]>([false, false, false, false]);
 
   const handleOpenBrowser = async () => {
     setIsBrowserOpen(true);
@@ -32,8 +52,16 @@ export default function Home() {
         return {
           id: doc.id,
           ...data,
-          grid:
-            typeof data.grid === "string" ? JSON.parse(data.grid) : data.grid,
+          patterns: data.patterns
+            ? typeof data.patterns === "string"
+              ? JSON.parse(data.patterns)
+              : data.patterns
+            : null,
+          grid: data.grid
+            ? typeof data.grid === "string"
+              ? JSON.parse(data.grid)
+              : data.grid
+            : null,
         };
       });
       setSavedBeats(beatList);
@@ -49,8 +77,10 @@ export default function Home() {
     const beatData = {
       name: beatName,
       bpm: bpm,
-      grid: grid,
+      patterns: JSON.stringify(patterns),
       trackUrls: trackUrls,
+      volumes: volumes,
+      mutes: mutes,
       createdAt: new Date(),
     };
 
@@ -62,29 +92,61 @@ export default function Home() {
       console.error("Error saving beat: ", error);
       alert("Failed to save beat");
     }
+    handleClearGrid();
   };
 
   const handleLoadBeat = (beat: any) => {
     setBpm(beat.bpm);
-    setGrid(JSON.parse(beat.grid));
     setTrackUrls(beat.trackUrls);
+
+    if (beat.patterns) {
+      setPatterns(beat.patterns);
+      setVolumes(beat.volumes || Array(beat.patterns.length).fill(1));
+      setMutes(beat.mutes || Array(beat.patterns.length).fill(false));
+    } else if (beat.grid) {
+      setPatterns([
+        beat.grid,
+        createBlankGrid(beat.grid.length),
+        createBlankGrid(beat.grid.length),
+        createBlankGrid(beat.grid.length),
+      ]);
+      setVolumes(beat.volumes || Array(beat.grid.length).fill(1));
+      setMutes(beat.mutes || Array(beat.grid.length).fill(false));
+    }
+
     setIsBrowserOpen(false);
   };
 
   const handleClearGrid = () => {
-    setGrid(new Array(4).fill(null).map(() => Array(16).fill(false)));
+    setPatterns((prevPatterns) => {
+      const newPatterns = [...prevPatterns];
+      newPatterns[activePattern] = createBlankGrid(
+        newPatterns[activePattern].length,
+      );
+      return newPatterns;
+    });
   };
 
   const handleAddTrack = () => {
-    setGrid((prevGrid) => [...prevGrid, Array(16).fill(false)]);
-    setTrackUrls((prevUrls) => [...prevUrls, ""]);
+    setPatterns((prevPatterns) =>
+      prevPatterns.map((grid) => [...grid, Array(16).fill(false)]),
+    );
+    setTrackUrls((prevUrls) => [...prevUrls, DEFAULT_SOUNDS[0].url]);
+    setVolumes((prev) => [...prev, 1]);
+    setMutes((prev) => [...prev, false]);
   };
 
   const toggleStep = (trackIndex: number, stepIndex: number) => {
-    const newGrid = [...grid];
-    newGrid[trackIndex] = [...newGrid[trackIndex]];
-    newGrid[trackIndex][stepIndex] = !newGrid[trackIndex][stepIndex];
-    setGrid(newGrid);
+    setPatterns((prevPatterns) => {
+      const newPatterns = [...prevPatterns];
+      const newGrid = [...newPatterns[activePattern]];
+      const newRow = [...newGrid[trackIndex]];
+      newRow[stepIndex] = !newRow[stepIndex];
+      newGrid[trackIndex] = newRow;
+      newPatterns[activePattern] = newGrid;
+
+      return newPatterns;
+    });
   };
 
   useEffect(() => {
@@ -93,7 +155,7 @@ export default function Home() {
       const soundsList = querySnapshot.docs.map(
         (doc) => doc.data() as { name: string; url: string },
       );
-      setCustomSounds(soundsList);
+      setCustomSounds([...DEFAULT_SOUNDS, ...soundsList]);
     };
 
     fetchSounds();
@@ -145,14 +207,39 @@ export default function Home() {
           onBpmChange={setBpm}
           onClear={handleClearGrid}
         />
+        <div className="flex gap-2 items-center bg-zinc-900 p-2 rounded-xl border border-zinc-800 w-fit">
+          <span className="text-zinc-500 font-bold text-xs px-2 tracking-widest uppercase">
+            Pattern
+          </span>
+          {["A", "B", "C", "D"].map((letter, index) => (
+            <button
+              key={letter}
+              onClick={() => setActivePattern(index)}
+              className={`
+        w-10 h-10 font-bold rounded transition-all
+        ${
+          activePattern === index
+            ? "bg-orange-500 text-white shadow-[0_0_15px_rgba(249,115,22,0.5)]"
+            : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-white"
+        }
+      `}
+            >
+              {letter}
+            </button>
+          ))}
+        </div>
         <Sequencer
           currentStep={currentStep}
           customSounds={customSounds}
           trackUrls={trackUrls}
           setTrackUrls={setTrackUrls}
-          grid={grid}
+          grid={currentGrid}
           toggleStep={toggleStep}
           onAddTrack={handleAddTrack}
+          volumes={volumes}
+          setVolumes={setVolumes}
+          mutes={mutes}
+          setMutes={setMutes}
         />
         <Uploader />
       </div>
