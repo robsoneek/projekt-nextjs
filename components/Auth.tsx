@@ -5,6 +5,7 @@ import {
   createUserWithEmailAndPassword,
 } from "firebase/auth";
 import { auth } from "../app/firebase";
+import { useRouter } from "next/navigation";
 
 type Props = {
   isLogin: boolean;
@@ -15,6 +16,7 @@ export default function Auth({ isLogin = true }: Props) {
   const [password, setPassword] = useState("");
   const [isRegistering, setIsRegistering] = useState(isLogin);
   const [error, setError] = useState("");
+  const router = useRouter();
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,6 +29,7 @@ export default function Auth({ isLogin = true }: Props) {
         await signInWithEmailAndPassword(auth, email, password);
         alert("Login successful!");
       }
+      router.push("/");
     } catch (err: any) {
       setError(err.message);
     }

@@ -10,6 +10,7 @@ import { db } from "@/app/firebase";
 import PlaybackControls from "@/components/PlaybackControls";
 import Uploader from "@/components/Uploader";
 import { create } from "domain";
+import { exportBeatToWav } from "@/utils/audioExport";
 
 const DEFAULT_SOUNDS = [
   { name: "Kick", url: "/sounds/KICK - my favorite.wav" },
@@ -228,6 +229,21 @@ export default function Home() {
             </button>
           ))}
         </div>
+        <button
+          onClick={() =>
+            exportBeatToWav(
+              patterns,
+              activePattern,
+              trackUrls,
+              bpm,
+              volumes,
+              mutes,
+            )
+          }
+          className="bg-orange-500 text-white px-4 py-2 rounded font-bold"
+        >
+          Test Export Setup
+        </button>
         <Sequencer
           currentStep={currentStep}
           customSounds={customSounds}
