@@ -1,15 +1,21 @@
 import { db } from "@/app/firebase"; 
-import { collection, addDoc } from "firebase/firestore";
+import { collection, addDoc, Timestamp, FieldValue } from "firebase/firestore";
 import { doc, getDoc } from "firebase/firestore";
 
 type BeatData = {
   creatorId?: string;
-  patterns: string; 
+  authorId?: string;
+  authorName?: string;
+  name?: string;
+  patterns: string;
   trackUrls: string[];
   bpm: number;
   volumes: number[];
   mutes: boolean[];
-  createdAt: Date;
+  createdAt: Date | Timestamp | FieldValue; 
+  likeCount?: number;
+  likeUsers?: string[];
+  likes?: string[];
 };
 
 export async function saveBeatToCloud(beatData: BeatData) {

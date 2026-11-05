@@ -4,6 +4,7 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { getBeatFromCloud } from "@/utils/db";
 import Link from "next/link";
 import StudioUI from "@/components/StudioUI";
+import CommentSection from "@/components/CommentSection";
 
 export default function SharedBeatPage() {
   const params = useParams();
@@ -103,6 +104,8 @@ export default function SharedBeatPage() {
             initialVolumes={beatData.volumes}
             initialMutes={beatData.mutes}
           />
+
+          <CommentSection beatId="{beatId}" />
         </div>
       </div>
     </div>

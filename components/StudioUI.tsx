@@ -4,10 +4,15 @@ import { useState, useEffect } from "react";
 import Sequencer from "@/components/Sequencer";
 import PlaybackControls from "@/components/PlaybackControls";
 import Uploader from "@/components/Uploader";
-import { collection, getDocs, addDoc } from "firebase/firestore";
-import { db } from "@/app/firebase";
+import {
+  collection,
+  getDocs,
+  addDoc,
+  serverTimestamp,
+} from "firebase/firestore";
 import { exportBeatToWav } from "@/utils/audioExport";
 import { saveBeatToCloud } from "@/utils/db";
+import { auth, db } from "@/app/firebase";
 
 const DEFAULT_SOUNDS = [
   { name: "Kick", url: "/sounds/KICK - my favorite.wav" },
@@ -80,14 +85,23 @@ export default function StudioUI({
 
   const handleShare = async () => {
     setIsSharing(true);
+    const currentUser = auth.currentUser;
     const currentBeat = {
-      // creatorId: user?.uid,
+      name: beatName.trim() || "Untitled Beat",
+      bpm: bpm,
       patterns: JSON.stringify(patterns),
       trackUrls: trackUrls,
-      bpm: bpm,
       volumes: volumes,
       mutes: mutes,
-      createdAt: new Date(),
+      createdAt: serverTimestamp(),
+
+      authorId: currentUser ? currentUser.uid : "anonymous",
+      authorName:
+        currentUser?.displayName ||
+        currentUser?.email?.split("@")[0] ||
+        "Anonymous Producer",
+      likeCount: 0,
+      likes: [],
     };
     const beatId = await saveBeatToCloud(currentBeat);
 
@@ -132,14 +146,25 @@ export default function StudioUI({
     if (!beatName.trim()) {
       alert("Name your beat first!");
     }
+
+    const currentUser = auth.currentUser;
+
     const beatData = {
-      name: beatName,
+      name: beatName.trim() || "Untitled Beat",
       bpm: bpm,
       patterns: JSON.stringify(patterns),
       trackUrls: trackUrls,
       volumes: volumes,
       mutes: mutes,
-      createdAt: new Date(),
+      createdAt: serverTimestamp(),
+
+      authorId: currentUser ? currentUser.uid : "anonymous",
+      authorName:
+        currentUser?.displayName ||
+        currentUser?.email?.split("@")[0] ||
+        "Anonymous Producer",
+      likeCount: 0,
+      likes: [],
     };
 
     try {

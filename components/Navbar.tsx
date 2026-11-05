@@ -34,6 +34,12 @@ export default function Navbar() {
           Studio
         </Link>
         <Link
+          href="/feed"
+          className="text-zinc-400 hover:text-white text-sm font-medium transition-colors"
+        >
+          Feed
+        </Link>
+        <Link
           href="/library"
           className="text-zinc-400 hover:text-white text-sm font-medium transition-colors"
         >

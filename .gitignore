@@ -43,5 +43,8 @@ next-env.d.ts
 # local env files
 .env.local
 
-#todo file
+# todo file
 TODO.md
+
+# zdroje a poznamky
+zdroje.md
